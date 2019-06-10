@@ -1,0 +1,6 @@
+magnus_notes.md
+redundant
+**/node_modules/**/*
+**/.DS_Store
+dist
+mydata

@@ -1,0 +1,90 @@
+#! /bin/bash
+
+clear
+
+####################################################
+### Assess arguments and determine script execution
+####################################################
+quietByDefault=" --silent  2> /dev/null  "
+
+print_usage() {
+  echo
+  echo "SCRIPT PERMITTED USAGE:"
+  echo "-h, --help: show options"
+  echo "-v, --verbose: print progress/results on build"
+  echo "-w, --wba: build then run Webpack-Bundle-Analyzer"
+}
+
+for arg in "$@"; do
+  case $arg in
+  -h | --help)
+    print_usage
+    exit 0
+    ;;
+  -v | --verbose)
+    quietByDefault=" --progress "
+    ;;
+  -w | --wba)
+    genWBAStats=" --json > dist/compilation-stats.json "
+    ;;
+  -*)
+    echo "Flag unrecognized "$arg
+    print_usage
+    exit 1
+    ;;
+  *)
+    echo "No arguments allow; argument given: "$arg
+    print_usage
+    exit 1
+    ;;
+  esac
+done
+
+####################################################
+### Proceed to webpack JS bundles
+####################################################
+
+echo """
+============================
+BUILDING PRODUCTION BUNDLES
+============================
+"""
+
+# Clean out dist
+rm -rf dist/*
+
+echo '>>> PACKING SERVER'
+# NODE_ENV=localprod ./node_modules/.bin/webpack --config ./webpacking/webpack.server.config.ts -p --production --colors
+
+echo '>>> PACKING CLIENT '
+cmd="./node_modules/.bin/cross-env TS_NODE_PROJECT=tsconfig.webpack.json NODE_ENV=production ./node_modules/.bin/webpack --config ./webpacking/webpack.client.config.ts -p --colors --profile $quietByDefault $genWBAStats"
+eval $cmd
+
+####################################################
+### Optionally run WBA
+####################################################
+
+if [[ ! -z $genWBAStats ]]; then
+  echo """
+  - - - - - - - - - - - - - - - - - - - - - - - - -
+  Build complete. Launching webpack-bundle-analyzer
+  - - - - - - - - - - - - - - - - - - - - - - - - -
+  """
+  ./node_modules/.bin/webpack-bundle-analyzer dist/compilation-stats.json
+fi
+
+####################################################
+### Print file sizes of any output files in dist
+####################################################
+if [[ $(ls dist | wc -l) -gt 0 ]]; then
+  echo
+  echo "--------------"
+  echo "dist contents:"
+  echo "--------------"
+  gdu --exclude=dist/\*map -hsc -- dist/*
+
+else
+  echo "---------------------"
+  echo "Build UNSUCCESSFUL!!!"
+  echo "---------------------"
+fi
