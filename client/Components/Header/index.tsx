@@ -6,16 +6,13 @@ export const Header = () => {
     <div className={'header-container ' + scssStyles.headerContainer}>
       <ul className={scssStyles.unorderedList}>
         <li>
-          <Link to="/">Home!!!</Link>
+          <Link to="/">Home</Link>
         </li>
         <li>
           <Link to="/testing">Testing</Link>
         </li>
         <li>
           <Link to="/template">Template</Link>
-        </li>
-        <li>
-          <Link to="/dynamic">Dynamic</Link>
         </li>
         <li>
           <Link to="/start">StartCoding</Link>

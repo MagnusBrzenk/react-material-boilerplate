@@ -1,9 +1,8 @@
-import './styles.scss';
 import React, { useState } from 'react';
+import Button from '@material-ui/core/Button';
+import './styles.scss';
 
 export const Home = (props: { sth: string }) => {
-  //
-
   const [state, setState] = useState({ counter: 0 });
 
   return (
@@ -14,6 +13,10 @@ export const Home = (props: { sth: string }) => {
       <button onClick={() => setState(oldState => ({ counter: oldState.counter + 1 }))}>
         HSDSDD
       </button>
+
+      <Button variant="contained" color="primary">
+        Hello World
+      </Button>
     </div>
   );
 };
