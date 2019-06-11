@@ -1,11 +1,20 @@
 #! /bin/bash
 
-clear
+# Import env variables:
+if [ -f $PWD/.env ]; then
+  echo ">>> Loading env vars from .env"
+  eval $(cat .env | sed 's/^/export /')
+else
+  echo "No .env file found!!!"
+  return 1
+fi
 
+clear
 ####################################################
 ### Assess arguments and determine script execution
 ####################################################
 quietByDefault=" --silent  2> /dev/null  "
+BASE_HREF="/"
 
 print_usage() {
   echo
@@ -13,6 +22,7 @@ print_usage() {
   echo "-h, --help: show options"
   echo "-v, --verbose: print progress/results on build"
   echo "-w, --wba: build then run Webpack-Bundle-Analyzer"
+  echo "-g, --github: build for github deployment"
 }
 
 for arg in "$@"; do
@@ -26,6 +36,10 @@ for arg in "$@"; do
     ;;
   -w | --wba)
     genWBAStats=" --json > dist/compilation-stats.json "
+    ;;
+  -g | --github)
+    BASE_HREF="/"$GITHUB_REPO_NAME"/"
+    echo ">>> Building for github"
     ;;
   -*)
     echo "Flag unrecognized "$arg
@@ -53,11 +67,11 @@ BUILDING PRODUCTION BUNDLES
 # Clean out dist
 rm -rf dist/*
 
-echo '>>> PACKING SERVER'
+echo '>>> WEBPACKING SERVER'
 # NODE_ENV=localprod ./node_modules/.bin/webpack --config ./webpacking/webpack.server.config.ts -p --production --colors
 
-echo '>>> PACKING CLIENT '
-cmd="./node_modules/.bin/cross-env TS_NODE_PROJECT=tsconfig.webpack.json NODE_ENV=production ./node_modules/.bin/webpack --config ./webpacking/webpack.client.config.ts -p --colors --profile $quietByDefault $genWBAStats"
+echo '>>> WEBPACKING CLIENT '
+cmd="BASE_HREF=$BASE_HREF TS_NODE_PROJECT=tsconfig.webpack.json NODE_ENV=production ./node_modules/.bin/webpack --config ./webpacking/webpack.client.config.ts -p --colors --profile $quietByDefault $genWBAStats"
 eval $cmd
 
 ####################################################

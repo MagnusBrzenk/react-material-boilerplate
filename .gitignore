@@ -4,3 +4,4 @@ redundant
 **/.DS_Store
 dist
 mydata
+.env

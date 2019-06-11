@@ -1,28 +1,32 @@
-import webpack, { Configuration as WebpackConfiguration } from "webpack";
-import { Configuration as WebpackDevServerConfiguration } from "webpack-dev-server";
-import merge from "webpack-merge";
-import path from "path";
+import webpack, { Configuration as WebpackConfiguration } from 'webpack';
+import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+import merge from 'webpack-merge';
+import path from 'path';
 
 // Webpack plugins:
-import HtmlWebpackPlugin from "html-webpack-plugin";
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import TerserPlugin from "terser-webpack-plugin";
-import OptimizeCSSAssetsPlugin from "optimize-css-assets-webpack-plugin";
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
+// const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
+
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
+import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 
 // Misc imports:
-const safePostCssParser = require("postcss-safe-parser");
-const isWsl = require("is-wsl");
+const safePostCssParser = require('postcss-safe-parser');
+const isWsl = require('is-wsl');
 
 // Webpack config common to both client and server:
-import { getCSSLoaderArray } from "./utils";
-import { commonWebpackConfig } from "./webpack.common.config";
+import { getCSSLoaderArray } from './utils';
+import { commonWebpackConfig } from './webpack.common.config';
 
 // Params
 interface Configuration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;
 }
-const isProduction: boolean = process.env.NODE_ENV === "production";
-const devPort = process.env.DEV_PORT || "3000";
+const isProduction: boolean = process.env.NODE_ENV === 'production';
+const baseHref = process.env.BASE_HREF || '/';
+const devPort = process.env.DEV_PORT || '3000';
 
 ////////////////////////
 // Webpack for Client //
@@ -30,33 +34,33 @@ const devPort = process.env.DEV_PORT || "3000";
 
 const clientWebpackConfig: Configuration = {
   entry: isProduction
-    ? [path.resolve("client", "index.tsx")]
+    ? [path.resolve('client', 'index.tsx')]
     : [
-        "webpack-dev-server/client?http://localhost:" + devPort,
-        "webpack/hot/only-dev-server",
-        path.resolve("client", "index.tsx")
+        'webpack-dev-server/client?http://localhost:' + devPort,
+        'webpack/hot/only-dev-server',
+        path.resolve('client', 'index.tsx')
       ],
 
   output: {
-    filename: isProduction ? "[name].[contenthash].js" : "[name].[hash].js",
+    filename: isProduction ? '[name].[contenthash].js' : '[name].[hash].js',
     // chunkFilename: "[name].[hash].js",
     // chunkFilename: "[name].[chunkhash].js",
-    path: path.resolve("dist"),
-    publicPath: "/"
+    path: path.resolve('dist'),
+    publicPath: ''
   },
 
-  target: "web", // See: https://webpack.js.org/concepts/targets/
+  target: 'web', // See: https://webpack.js.org/concepts/targets/
 
   devServer: {
     hot: true,
-    contentBase: [path.resolve("resources", "images"), path.resolve("dist")],
+    contentBase: [path.resolve('resources', 'images'), path.resolve('dist')],
     publicPath: `http://localhost:${devPort}/`,
     historyApiFallback: {
       disableDotRule: true
     },
     proxy: {
-      "/api": {
-        target: "http://localhost:5000",
+      '/api': {
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false
       }
@@ -66,7 +70,7 @@ const clientWebpackConfig: Configuration = {
   resolve: !!isProduction
     ? {}
     : {
-        alias: { "react-dom": "@hot-loader/react-dom" }
+        alias: { 'react-dom': '@hot-loader/react-dom' }
       },
 
   module: {
@@ -75,14 +79,14 @@ const clientWebpackConfig: Configuration = {
         test: /\.(js|jsx|ts|tsx)?$/,
         use: [
           {
-            loader: "ts-loader",
+            loader: 'ts-loader',
             options: {
               transpileOnly: true,
               happyPackMode: true
             }
           },
           !isProduction && {
-            loader: "react-hot-loader/webpack"
+            loader: 'react-hot-loader/webpack'
           }
         ].filter(Boolean) as webpack.RuleSetUse,
         exclude: [/node_modules/]
@@ -91,31 +95,31 @@ const clientWebpackConfig: Configuration = {
       //GLOBAL STYLES (modules: false)
       {
         test: /global\.css$/,
-        use: getCSSLoaderArray("css", false)
+        use: getCSSLoaderArray('css', false)
       },
       {
         test: /global\.less$/,
-        use: getCSSLoaderArray("less", false)
+        use: getCSSLoaderArray('less', false)
       },
       {
         test: /global\.scss$/,
-        use: getCSSLoaderArray("scss", false)
+        use: getCSSLoaderArray('scss', false)
       },
       // LOCAL STYLES (modules: true)
       {
         test: /\.css$/,
         exclude: /global\.css$/,
-        use: getCSSLoaderArray("css", true)
+        use: getCSSLoaderArray('css', true)
       },
       {
         test: /\.less$/,
         exclude: /global\.less$/,
-        use: getCSSLoaderArray("less", true)
+        use: getCSSLoaderArray('less', true)
       },
       {
         test: /\.(sass|scss)$/,
         exclude: /global\.(sass|scss)$/,
-        use: getCSSLoaderArray("scss", true)
+        use: getCSSLoaderArray('scss', true)
       }
     ]
   },
@@ -124,14 +128,42 @@ const clientWebpackConfig: Configuration = {
     // Extract CSS from bundle and place in external .css file
     new MiniCssExtractPlugin({
       //
-      filename: "[name].[hash].css",
-      chunkFilename: "[name].[hash].css"
+      filename: '[name].[hash].css',
+      chunkFilename: '[name].[hash].css'
     }),
 
-    // Inject react <script> into html file and copy over to output
-    new HtmlWebpackPlugin({
-      template: path.resolve("client", "index.html"),
-      title: "Caching"
+    // Process index.html file
+    new HtmlWebpackPlugin(
+      Object.assign(
+        {},
+        {
+          inject: true,
+          template: path.resolve('client', 'index.html')
+        },
+        isProduction
+          ? {
+              minify: {
+                removeComments: true,
+                collapseWhitespace: true,
+                removeRedundantAttributes: true,
+                useShortDoctype: true,
+                removeEmptyAttributes: true,
+                removeStyleLinkTypeAttributes: true,
+                keepClosingSlash: true,
+                minifyJS: true,
+                minifyCSS: true,
+                minifyURLs: true
+              }
+            }
+          : undefined
+      )
+    ),
+
+    // Replace %___% patterns within index.html
+    new InterpolateHtmlPlugin(HtmlWebpackPlugin, { PUBLIC_URL: baseHref }),
+
+    new webpack.DefinePlugin({
+      __BASE_HREF__: `"${baseHref}"`
     })
   ].filter(Boolean) as webpack.Plugin[],
 
@@ -206,13 +238,13 @@ const clientWebpackConfig: Configuration = {
       name: true,
       cacheGroups: {
         commons: {
-          chunks: "initial",
+          chunks: 'initial',
           minChunks: 20
         },
         vendors: {
           test: /[\\/]node_modules[\\/]/,
-          chunks: "all",
-          name: "vendors"
+          chunks: 'all',
+          name: 'vendors'
         }
       }
     }

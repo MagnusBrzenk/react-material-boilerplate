@@ -1,37 +1,39 @@
-declare module "*.css" {
+declare var __BASE_HREF__: any;
+
+declare module '*.css' {
   const styles: any;
   export = styles;
 }
 
-declare module "*.scss" {
+declare module '*.scss' {
   const styles: any;
   export = styles;
 }
 
-declare module "*.sass" {
+declare module '*.sass' {
   const styles: any;
   export = styles;
 }
 
-declare module "*.less" {
+declare module '*.less' {
   const styles: any;
   export = styles;
 }
 
-declare module "*.html" {
+declare module '*.html' {
   const htmlText: any;
   export = htmlText;
 }
 
-declare module "*.txt" {
+declare module '*.txt' {
   const txtText: any;
   export = txtText;
 }
 
-declare module "*.csv";
+declare module '*.csv';
 
-declare module "*.jpg";
+declare module '*.jpg';
 
-declare module "*.json";
+declare module '*.json';
 
-declare module "*.svg";
+declare module '*.svg';

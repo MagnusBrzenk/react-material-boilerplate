@@ -1,0 +1,34 @@
+#! /bin/bash
+
+# Build bundles with BASE_HREF set got github repo
+./_build_prod --github
+
+# Import env variables:
+if [ -f $PWD/.env ]; then
+  eval $(cat .env | sed 's/^/export /')
+else
+  echo "No .env file found!!!"
+  return 1
+fi
+
+# Build and execute JS for easy ghpages deployment
+cmd="
+  const ghpages = require('gh-pages');
+  ghpages.publish('dist', function (err) {
+    if (!!err) {
+      console.log(\`
+      ============================
+        OH NO! STH WENT WRONG :(
+      ============================
+      \`);
+      process.exit(1);
+    }
+    console.log(\`
+=======================================================================
+DEPLOYED TO: https://${GITHUB_USER_NAME}.github.io/${GITHUB_REPO_NAME}/
+=======================================================================
+    \`);
+  })
+"
+
+node -e "$cmd"

@@ -35,7 +35,7 @@ const HMRContent: React.FC = hot(module)(() => (
         />
       }
     >
-      <Router basename={process.env.BASE_REF || '/'}>
+      <Router basename={`${__BASE_HREF__}`}>
         <div className="page-wrapper">
           <ResponsiveDrawer>
             <Switch>
